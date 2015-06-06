@@ -16,10 +16,17 @@ aggregatedOperator<-function(history, oldModel)
   return (list(newPoints=newPoints,newModel=newModel))
 }
 
-metaheuristicRun<-function(initialization)#, startPoints, termination, evaluation)
+metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
 {
   history<-initialization(startPoints)
-#  history<-evaluateList(history)
+  print(history)
+ # i<-1
+#  n<-5
+ # while (!termination(i,n)) { 
+#    print(i)
+#    i<-i+1
+#  }
+  history<-evaluateList(history, evaluation)
  # model<-initModel(history)
   #while (!termination(history,model))
   #{
@@ -46,37 +53,62 @@ historyPop<-function(history, number)
 
 evaluateList<-function(points,evaluation)
 {
-  for (i in 1:length(points))
-    points[[i]]$quality<-evaluation(points[[i]]$coordinates)
+
+  for (i in 1:length(points$x)) {
+    points$quality[[i]]<-evaluation(points$x[[i]], points$y[[i]])
+  }
   return (points) 
 }
+
+#commonFunctions
 
 mi<-10
 
 
 
-ga.startPoints<-function(mi)
+generateStartPoints<-function(mi)
 {
-  startPoints<-data.frame(sigma_x=numeric(mi), sigma_y=numeric(mi), x=numeric(mi), y=numeric(mi), minimum=numeric(mi))
+  points<-data.frame(x = numeric(mi),y = numeric(mi))
   for (i in 1:mi)
   {
-    startPoints$x[i]<-runif(1, -512, 512)
-    startPoints$y[i]<-runif(1, -512, 512)
-    startPoints$sigma_x[i]<-0.2
-    startPoints$sigma_y[i]<-0.2
-    startPoints$minimum[i]<-1000.0
-    startPoints$best_minimum[i]<-1000.0
+    points$x[i]<-runif(1, -10, 10)
+    points$y[i]<-runif(1, -10, 10)
+   # startPoints$sigma_x[i]<-0.2
+  #  startPoints$sigma_y[i]<-0.2
+  #  startPoints$minimum[i]<-1000.0
+  #  startPoints$best_minimum[i]<-1000.0
   }
-  return (startPoints)
+  return (points)
   
 }
 
-ga.initialization<-function(startPoints)
+termination<-function(i, n)
 {
-  return (startPoints)
+  if (i <= n) { 
+    return (F) 
+  } 
+  else { 
+    return (T) 
+  }
 }
 
-startPoints <- ga.startPoints(mi)
+evaluation<-function(x, y)
+{
+  return(x^2 + y^2)
+}
 
-objectx<-metaheuristicRun(initialization)
+initialization<-function(points){
+  historyPoints<-data.frame(points)
+  return (historyPoints)
+}
 
+########## funtion
+
+library(ggplot2)
+
+startPoints<-generateStartPoints(mi)
+
+
+objectx<-metaheuristicRun(initialization, startPoints, termination, evaluation)
+print(qplot(startPoints$x, startPoints$y))
+#bla<-termination(3,2)
