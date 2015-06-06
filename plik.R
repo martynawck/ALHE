@@ -9,9 +9,7 @@ select<-function(history, model)
     sigma_y<-vector(mode="double", length=0)
     x<-vector(mode="double", length=0)
     y<-vector(mode="double", length=0)
-    k <- sample(2:length(history$x), 1)
-    
-    for (i in 1:k) {
+    for (i in 1:2) {
           if (vector.is.empty(usedValues)) {
             j <- sample(1:length(history$x), 1)
             
@@ -44,6 +42,7 @@ select<-function(history, model)
     temp<-data.frame(sigma_x=history$sigma_x[k], sigma_y=history$sigma_y[k], x=history$x[k], y=history$y[k], 
                      minimum=history$minimum[k], best_x=history$x[1], best_y=history$y[1], best_minimum=history$minimum[1])
   }
+  print(temp)
   return (temp)
 }
 
@@ -57,7 +56,16 @@ modelUpdate<-function(selectedPoints, oldModel)
 
 variation<-function(selectedPoints, model)
 { 
-  
+  if (length(selectedPoints$x) == 1) {
+    print("jeden")
+    selectedPoints<-mutation(selectedPoints)
+  }
+  else {
+    print("dwa")
+    afterCrossover<-crossover(selectedPoints[1,], selectedPoints[2,] )
+    selectedPoints<-mutation(afterCrossover)
+  }
+  print(selectedPoints)
   return (selectedPoints)
 }
 
@@ -69,6 +77,34 @@ crossover<-function(parent1, parent2)
   parent1$sigma_x<-a*parent1$sigma_x+(1-a)*parent2$sigma_x
   parent1$sigma_y<-a*parent1$sigma_y+(1-a)*parent2$sigma_y
   return (parent1)
+}
+
+mutation<-function(point)
+{
+  epsilon <- runif(1, -1, 1)
+  epsilonX <- runif(1, -1, 1)
+  epsilonY <- runif(1, -1, 1)
+  vX <- runif(1, -1, 1)
+  vY <- runif(1, -1, 1)
+  rA <- 1/(1/sqrt(4))
+  rB <- 1/(1/sqrt(2*sqrt(2)))
+  point$sigma_x <- point$sigma_x*exp(rA*epsilon + rB*epsilonX)
+  point$sigma_y <- point$sigma_y*exp(rA*epsilon + rB*epsilonY)
+  point$x <- point$x + point$sigma_x*vX
+  point$y <- point$y + point$sigma_y*vY
+  if (point$x < -512) {
+    point$x<-(-512)
+  }
+  if (point$x > 512) {
+    point$x<-512
+  }
+  if (point$y < -512) {
+    point$y<-(-512)
+  }
+  if (point$y > 512) {
+    point$y<-512
+  }
+  return (point)
 }
 
 
@@ -193,7 +229,7 @@ selection<-function(point, history)
 library(ggplot2)
 
 startPoints<-generateStartPoints(mi)
-prawdopodobienstwo<-0.5
+prawdopodobienstwo<-1
 
 objectx<-metaheuristicRun(initialization, startPoints, termination, evaluation)
 print(qplot(objectx$x, objectx$y))
