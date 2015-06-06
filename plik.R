@@ -2,9 +2,9 @@
 select<-function(history, model)
 {
   a<-runif(1)
+  usedValues <- vector(mode="numeric", length=0)
   
   if (a < prawdopodobienstwo) {
-    usedValues <- vector(mode="numeric", length=0)
     sigma_x<-vector(mode="double", length=0)
     sigma_y<-vector(mode="double", length=0)
     x<-vector(mode="double", length=0)
@@ -13,7 +13,6 @@ select<-function(history, model)
           if (vector.is.empty(usedValues)) {
             j <- sample(1:length(history$x), 1)
             
-            usedValues<-c(usedValues, j)
             usedValues<-c(usedValues, j)
             sigma_x<-c(sigma_x, history$sigma_x[j])
             sigma_y<-c(sigma_y, history$sigma_y[j])
@@ -34,15 +33,14 @@ select<-function(history, model)
             
           }
     }
-    
     temp<-data.frame(sigma_x=sigma_x, sigma_y=sigma_y, x=x, y=y)
     
   } else {
-    k <- sample(2:length(history$x), 1)
-    temp<-data.frame(sigma_x=history$sigma_x[k], sigma_y=history$sigma_y[k], x=history$x[k], y=history$y[k], 
-                     minimum=history$minimum[k], best_x=history$x[1], best_y=history$y[1], best_minimum=history$minimum[1])
+    j <- sample(1:length(history$x), 1)
+    usedValues<-c(usedValues, j)
+    temp<-data.frame(sigma_x=history$sigma_x[j], sigma_y=history$sigma_y[j], x=history$x[j], y=history$y[j])
   }
-  print(temp)
+
   return (temp)
 }
 
@@ -51,21 +49,25 @@ vector.is.empty <- function(x)
 
 modelUpdate<-function(selectedPoints, oldModel)
 {
+  print(oldModel)
+  for (i in 1:length(selectedPoints$x)) {
+    oldModel<-oldModel[-(oldModel$x == selectedPoints$x[i]),]
+    #oldModel<-oldModel[- selectedPoints$x[i] ,]
+  }
+  print("old model")
+  print(oldModel)
   return (oldModel)
 }
 
 variation<-function(selectedPoints, model)
 { 
   if (length(selectedPoints$x) == 1) {
-    print("jeden")
     selectedPoints<-mutation(selectedPoints)
   }
   else {
-    print("dwa")
     afterCrossover<-crossover(selectedPoints[1,], selectedPoints[2,] )
     selectedPoints<-mutation(afterCrossover)
   }
-  print(selectedPoints)
   return (selectedPoints)
 }
 
@@ -119,6 +121,7 @@ aggregatedOperator<-function(history, oldModel)
 { 
   selectedPoints<-select(history, oldModel)
   newModel<-modelUpdate(selectedPoints, oldModel)
+  print(length(newModel$x))
   newPoints<-variation(selectedPoints, newModel)
   return (list(newPoints=newPoints,newModel=newModel))
 }
@@ -126,15 +129,15 @@ aggregatedOperator<-function(history, oldModel)
 metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
 {
   history<-initialization(startPoints)
-  print(history)
   history<-evaluateList(history, evaluation)
   model<-initModel(history)
   i<-1
-  while (!termination(i,1))
+  while (!termination(i,5))
   {
     i<-i+1
     aa<-aggregatedOperator(history, model)
     aa$newPoints<-evaluateList(aa$newPoints, evaluation)
+    history<-aa$newModel
     history<-historyPush(history,aa$newPoints)
     model<-aa$newModel
   }
@@ -143,7 +146,8 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
 
 historyPush<-function(oldHistory, newPoints)
 {
-  newHistory<-c(oldHistory,newPoints)
+  newHistory <- rbind(oldHistory, data.frame(sigma_x = newPoints$sigma_x, sigma_y = newPoints$sigma_y, x= newPoints$x, y = newPoints$) )
+                      
   return (newHistory)
 }
 
@@ -168,15 +172,13 @@ mi<-10
 
 generateStartPoints<-function(mi)
 {
-  startPoints<-data.frame(sigma_x=numeric(mi), sigma_y=numeric(mi), x=numeric(mi), y=numeric(mi), minimum=numeric(mi))
+  startPoints<-data.frame(sigma_x=numeric(mi), sigma_y=numeric(mi), x=numeric(mi), y=numeric(mi))
   for (i in 1:mi)
   {
     startPoints$x[i]<-runif(1, -512, 512)
     startPoints$y[i]<-runif(1, -512, 512)
     startPoints$sigma_x[i]<-0.2
     startPoints$sigma_y[i]<-0.2
-    startPoints$minimum[i]<-1000.0
-    startPoints$best_minimum[i]<-1000.0
   }
   return (startPoints)
 }
@@ -203,34 +205,19 @@ initialization<-function(points)
 }
 
 initModel<-function(points)
-  {
+{
   historyPoints<-data.frame(points)
   return (historyPoints)
 }
 
-selection<-function(point, history)
-{
-  len<-max(i, 1)
-  if(len == 1 || point$minimum<history$best_minimum[len]) 
-  {
-    point$best_x<-point$x
-    point$best_y<-point$y
-    point$best_minimum<-point$minimum
-  } else {
-    point$best_x<-history$best_x[len]
-    point$best_y<-history$best_y[len]
-    point$best_minimum<-history$best_minimum[len]
-  }
-  return(point) 
-}
 
-########## funtion
+########## main funtion
 
 library(ggplot2)
 
 startPoints<-generateStartPoints(mi)
-prawdopodobienstwo<-1
+prawdopodobienstwo<-0.5
 
 objectx<-metaheuristicRun(initialization, startPoints, termination, evaluation)
-print(qplot(objectx$x, objectx$y))
+print(qplot(seq_along(objectx$quality), objectx$quality))
 #bla<-termination(3,2)
