@@ -5,7 +5,7 @@ antlion_N <- 50
 antNumber <- antlion_N
 lb <- -512
 ub <- 512
-max_iteration <- 50
+max_iteration <- 5
 current_iteration <-1
 
 addToMinVector<-function(vector, value)
@@ -178,8 +178,8 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
 historyPush<-function(oldHistory, newPoints)
 {
   newHistory <- rbind(oldHistory, newPoints)
-  print(newHistory)
-  #minValueInIteration<<-addToMinVector(minValueInIteration, min(newHistory[,5]))
+  print(newHistory$quality)
+  minValueInIteration<<-addToMinVector(minValueInIteration, min(newHistory$quality))
   return (newHistory)
 }
 
