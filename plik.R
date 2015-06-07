@@ -168,7 +168,7 @@ evaluateList<-function(points,evaluation)
 
 #commonFunctions
 
-mi<-10
+mi<-100
 
 generateStartPoints<-function(mi)
 {
@@ -219,5 +219,5 @@ startPoints<-generateStartPoints(mi)
 prawdopodobienstwo<-0.5
 
 objectx<-metaheuristicRun(initialization, startPoints, termination, evaluation)
-print(qplot(seq_along(objectx$quality), objectx$quality))
+print(qplot(seq_along(objectx$x), objectx$quality))
 #bla<-termination(3,2)
