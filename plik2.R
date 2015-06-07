@@ -2,10 +2,19 @@
 
 ## particle swarm
 
+minValueInIteration<-numeric(length=0)
+
 psPopulation<-50
-psIterations<-5000
+psIterations<-100
 cParam<-0.73
 aParam<-2.05
+
+
+addToMinVector<-function(vector, value)
+{
+  vector<-c(vector,value)
+  return (vector)
+}
 
 
 ps.selection<-function(history, model)
@@ -45,17 +54,17 @@ ps.variation<-function(points, model)
 		points$y[i]<-points$y[i]+newVelocity[[2]]
 		points$velocityX[i]<-newVelocity[[1]]
 		points$velocityY[i]<-newVelocity[[2]]
-		if (points$x[i] < -512) {
-			points$x[i]<-(-512)
+		if (points$x[i] < -10) {
+			points$x[i]<-(-10)
 		}
-		if (points$x[i] > 512) {
-			points$x[i]<-512
+		if (points$x[i] > 10) {
+			points$x[i]<-10
 		}
-		if (points$y[i] < -512) {
-			points$y[i]<-(-512)
+		if (points$y[i] < -10) {
+			points$y[i]<-(-10)
 		}
-		if (points$y[i] > 512) {
-			points$y[i]<-512
+		if (points$y[i] > 10) {
+			points$y[i]<-10
 		}
 	}
 	return (points)
@@ -66,8 +75,8 @@ ps.startPoints<-function(number)
 {
   points<-data.frame( x=numeric(psPopulation), y=numeric(psPopulation), velocityX=numeric(psPopulation), velocityY=numeric(psPopulation), quality=numeric(psPopulation))
   for (i in 1:psPopulation) {
-	points$x[i]<-runif(1, -512, 512)
-	points$y[i]<-runif(1, -512, 512)
+	points$x[i]<-runif(1, -10, 10)
+	points$y[i]<-runif(1, -10, 10)
 	points$velocityX[i]<-0.0
 	points$velocityY[i]<-0.0
   }
@@ -122,6 +131,7 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
     aa$newPoints<-evaluateList(aa$newPoints, evaluation)
     history<-historyPush(history,aa$newPoints)
     model<-aa$newModel
+    print(model)
     i<-i+1
   }
   return(history)
@@ -130,6 +140,7 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
 historyPush<-function(oldHistory, newPoints)
 {
   newHistory<-c(oldHistory,newPoints)
+  minValueInIteration<<-addToMinVector(minValueInIteration, min(newHistory$quality))
   return (newHistory)
 }
 
@@ -178,8 +189,19 @@ library(ggplot2)
 library(rgl)
 library(akima)
 
-startPoints<-ps.startPoints(10)
-history<-metaheuristicRun(ps.initialization, startPoints, termination, evaluation)
+startPoints<-ps.startPoints(40)
+objectx<-metaheuristicRun(ps.initialization, startPoints, termination, evaluation)
 bla<-termination(3,2)
 
-print(historyPop(history, 5))
+
+x <- objectx$x 
+y <- objectx$y 
+z <- objectx$quality 
+temp <- interp(x, y, z)
+#rzut na x-y
+plot.new() 
+image(temp) 
+#obraz 3d
+persp3d(temp, col="skyblue")
+#quality(iter)
+print(qplot(seq_along(minValueInIteration), minValueInIteration))
