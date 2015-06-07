@@ -37,6 +37,7 @@ ps.modelUpdate<-function(selectedPoints, model)
 			model$globalBestY[1]<-selectedPoints$y[i]
 		}
   }
+	minValueInIteration<<-addToMinVector(minValueInIteration, min(model$globalBestMinimum[1])) 
   return (model)
 }
 
@@ -54,17 +55,17 @@ ps.variation<-function(points, model)
 		points$y[i]<-points$y[i]+newVelocity[[2]]
 		points$velocityX[i]<-newVelocity[[1]]
 		points$velocityY[i]<-newVelocity[[2]]
-		if (points$x[i] < -10) {
-			points$x[i]<-(-10)
+		if (points$x[i] < -20) {
+			points$x[i]<-(-20)
 		}
-		if (points$x[i] > 10) {
-			points$x[i]<-10
+		if (points$x[i] > 20) {
+			points$x[i]<-20
 		}
-		if (points$y[i] < -10) {
-			points$y[i]<-(-10)
+		if (points$y[i] < -20) {
+			points$y[i]<-(-20)
 		}
-		if (points$y[i] > 10) {
-			points$y[i]<-10
+		if (points$y[i] > 20) {
+			points$y[i]<-20
 		}
 	}
 	return (points)
@@ -131,7 +132,6 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
     aa$newPoints<-evaluateList(aa$newPoints, evaluation)
     history<-historyPush(history,aa$newPoints)
     model<-aa$newModel
-    print(model)
     i<-i+1
   }
   return(history)
@@ -140,15 +140,17 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
 historyPush<-function(oldHistory, newPoints)
 {
   newHistory<-c(oldHistory,newPoints)
-  minValueInIteration<<-addToMinVector(minValueInIteration, min(newHistory$quality))
   return (newHistory)
 }
 
 historyPop<-function(history, number)
 {
-  stop=nrows(history)
+  #stop=nrow(history)
+  #start=max(stop-number+1,1)
+  #return(history[start:stop])
+  stop=length(history)
   start=max(stop-number+1,1)
-  return(history[start:stop,])
+  return(history[start:stop])
 }
 
 evaluateList<-function(points,evaluation)

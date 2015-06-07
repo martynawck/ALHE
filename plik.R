@@ -87,17 +87,17 @@ mutation<-function(point)
   point$sigma_y <- point$sigma_y*exp(rA*epsilon + rB*epsilonY)
   point$x <- point$x + point$sigma_x*vX
   point$y <- point$y + point$sigma_y*vY
-  if (point$x < -512) {
-    point$x<-(-512)
+  if (point$x < -20) {
+    point$x<-(-20)
   }
-  if (point$x > 512) {
-    point$x<-512
+  if (point$x > 20) {
+    point$x<-20
   }
-  if (point$y < -512) {
-    point$y<-(-512)
+  if (point$y < -20) {
+    point$y<-(-20)
   }
-  if (point$y > 512) {
-    point$y<-512
+  if (point$y > 20) {
+    point$y<-20
   }
   return (point)
 }
@@ -145,9 +145,12 @@ historyPush<-function(oldHistory, newPoints)
 
 historyPop<-function(history, number)
 {
-  stop=nrows(history)
+ # stop=nrow(history)
+  #start=max(stop-number+1,1)
+  #return(history[start:stop])
+  stop=length(history)
   start=max(stop-number+1,1)
-  return(history[start:stop,])
+  return(history[start:stop])
 }
 
 evaluateList<-function(points,evaluation)
@@ -165,8 +168,8 @@ generateStartPoints<-function(mi)
   startPoints<-data.frame(sigma_x=numeric(mi), sigma_y=numeric(mi), x=numeric(mi), y=numeric(mi))
   for (i in 1:mi)
   {
-    startPoints$x[i]<-runif(1, -512, 512)
-    startPoints$y[i]<-runif(1, -512, 512)
+    startPoints$x[i]<-runif(1, -10, 10)
+    startPoints$y[i]<-runif(1, -10, 10)
     startPoints$sigma_x[i]<-0.2
     startPoints$sigma_y[i]<-0.2
   }

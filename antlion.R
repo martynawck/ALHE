@@ -175,8 +175,7 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
 historyPush<-function(oldHistory, newPoints)
 {
   newHistory <- rbind(oldHistory, newPoints)
-  print(newHistory$quality)
-  minValueInIteration<<-addToMinVector(minValueInIteration, min(newHistory$quality))
+  minValueInIteration<<-addToMinVector(minValueInIteration, min(oldHistory$quality))
   return (newHistory)
 }
 
@@ -221,8 +220,8 @@ termination<-function(i, n)
 
 f1<-function(x, y)
 {
-  #return(x^2 + y^2)
-  return (-x^2 -y^2 + 600000)
+  return(x^2 + y^2)
+  #return (-x^2 -y^2 + 600000)
 }
 
 initialization<-function(points)
@@ -264,7 +263,7 @@ objectx<-metaheuristicRun(initialization, startPoints, termination, f1)
 x <- objectx$x 
 y <- objectx$y 
 z <- objectx$quality 
-temp <- interp(x, y, z)
+temp <- interp(x, y, z, duplicate="strip")
 #rzut na x-y
 plot.new() 
 image(temp) 
