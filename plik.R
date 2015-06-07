@@ -1,7 +1,15 @@
 ## evolutionary 
 
-evo_N <-100
+minValueInIteration<-numeric(length=0)
+
+evo_N <-20
 evo_p_cross <- 0.5
+
+addToMinVector<-function(vector, value)
+{
+  vector<-c(vector,value)
+  return (vector)
+}
 
 select<-function(history, model)
 {
@@ -131,6 +139,7 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
 historyPush<-function(oldHistory, newPoints)
 {
   newHistory <- rbind(oldHistory, newPoints)
+  minValueInIteration<<-addToMinVector(minValueInIteration, min(newHistory[,5]))
   return (newHistory)
 }
 
@@ -209,6 +218,10 @@ x <- objectx$x
 y <- objectx$y 
 z <- objectx$quality 
 temp <- interp(x, y, z)
-persp3d(temp, col="skyblue")
+#rzut na x-y
 plot.new() 
 image(temp) 
+#obraz 3d
+persp3d(temp, col="skyblue")
+#quality(iter)
+print(qplot(seq_along(minValueInIteration), minValueInIteration))

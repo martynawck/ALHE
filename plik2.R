@@ -2,10 +2,19 @@
 
 ## particle swarm
 
-psPopulation<-50
-psIterations<-5000
+minValueInIteration<-numeric(length=0)
+
+psPopulation<-20
+psIterations<-40
 cParam<-0.73
 aParam<-2.05
+
+
+addToMinVector<-function(vector, value)
+{
+  vector<-c(vector,value)
+  return (vector)
+}
 
 
 ps.selection<-function(history, model)
@@ -130,6 +139,7 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
 historyPush<-function(oldHistory, newPoints)
 {
   newHistory<-c(oldHistory,newPoints)
+  minValueInIteration<<-addToMinVector(minValueInIteration, min(newHistory$quality))
   return (newHistory)
 }
 
@@ -179,7 +189,18 @@ library(rgl)
 library(akima)
 
 startPoints<-ps.startPoints(10)
-history<-metaheuristicRun(ps.initialization, startPoints, termination, evaluation)
+objectx<-metaheuristicRun(ps.initialization, startPoints, termination, evaluation)
 bla<-termination(3,2)
 
-print(historyPop(history, 5))
+
+x <- objectx$x 
+y <- objectx$y 
+z <- objectx$quality 
+temp <- interp(x, y, z)
+#rzut na x-y
+plot.new() 
+image(temp) 
+#obraz 3d
+persp3d(temp, col="skyblue")
+#quality(iter)
+print(qplot(seq_along(minValueInIteration), minValueInIteration))

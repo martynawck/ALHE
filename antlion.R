@@ -1,10 +1,18 @@
 
+minValueInIteration<-numeric(length=0)
+
 antlion_N <- 50
 antNumber <- antlion_N
 lb <- -512
 ub <- 512
 max_iteration <- 50
 current_iteration <-1
+
+addToMinVector<-function(vector, value)
+{
+  vector<-c(vector,value)
+  return (vector)
+}
 
 select<-function(history, model)
 {
@@ -170,6 +178,8 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
 historyPush<-function(oldHistory, newPoints)
 {
   newHistory <- rbind(oldHistory, newPoints)
+  print(newHistory)
+  #minValueInIteration<<-addToMinVector(minValueInIteration, min(newHistory[,5]))
   return (newHistory)
 }
 
@@ -248,8 +258,22 @@ findEliteAntlion<-function(model)
 
 
 library(ggplot2)
+library(rgl)
+library(akima)
 
 startPoints<-generateStartPoints(antlion_N)
 
 objectx<-metaheuristicRun(initialization, startPoints, termination, f1)
-print(qplot(seq_along(objectx$x), objectx$quality))
+#print(qplot(seq_along(objectx$x), objectx$quality))
+
+x <- objectx$x 
+y <- objectx$y 
+z <- objectx$quality 
+temp <- interp(x, y, z)
+#rzut na x-y
+plot.new() 
+image(temp) 
+#obraz 3d
+persp3d(temp, col="skyblue")
+#quality(iter)
+print(qplot(seq_along(minValueInIteration), minValueInIteration))
