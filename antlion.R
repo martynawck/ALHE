@@ -1,9 +1,9 @@
 
-antlion_N <- 10
+antlion_N <- 50
 antNumber <- antlion_N
 lb <- -512
-up <- 512
-max_iteration <- 20
+ub <- 512
+max_iteration <- 50
 current_iteration <-1
 
 select<-function(history, model)
@@ -14,14 +14,17 @@ select<-function(history, model)
 modelUpdate<-function(selectedPoints, oldModel)
 {
   selectedPoints <- evaluateList(selectedPoints, f1)
-  for (i in 1:antNumber)
-  {
-    antlionIdx <- selectedPoints$antlionIdx[i]
-    if (selectedPoints$quality[i] > oldModel$quality[antlionIdx])  # jeśli mrówka jest lepsza od mrówkolwa
+  if ("antlionIdx" %in% colnames(selectedPoints)) {
+    for (i in 1:antNumber)
     {
-      oldModel[i] <- selectedPoints[i]
+      antlionIdx <- selectedPoints$antlionIdx[i]
+      if (selectedPoints$quality[i] > oldModel$quality[antlionIdx])  # jeśli mrówka jest lepsza od mrówkolwa
+      {
+        print("omnomnom") 
+        oldModel[i,] <- selectedPoints[i,]      #mrówkolew ją zjada i przechodzi na jej miejsce
+      }
     }
-  }
+  } 
   return (evaluateList(oldModel, f1))
 }
 
@@ -32,7 +35,7 @@ variation<-function(selectedPoints, model)
     # policz random walk dookoła losowego antliona i dookoła elitarnego antliona
     antlionIdx <- roulette_sel(model)
     selectedPoints$antlionIdx[i] <- antlionIdx
-    ra <- random_walk(model[antlionIdx])
+    ra <- random_walk(model[antlionIdx,])
     re <- random_walk(findEliteAntlion(model))
     selectedPoints$x[i] <- (ra$x + re$x)/2
     selectedPoints$y[i] <- (ra$y + re$y)/2
@@ -66,13 +69,26 @@ random_walk<-function(antlion)
   localUb <- update_boundary_with_antlion(localUb, antlion) # równania 2.8, 2.9
   localLb <- update_boundary_with_antlion(localLb, antlion)
   
-  rw <- data.frame( x = calculate_random_walk(localUb, localLb), y = calculate_random_walk(localUb, localLb) )
-  return (rw)
+  rw <- calculate_random_walk(localUb, localLb)
+  
+  return (rw[current_iteration,])
 }
 
 calculate_random_walk<-function(localUb, localLb) 
 {
-  # TODO???? równania 2.1, 2.2, 2.7
+  x <- calculate_random_walk_one_dimention(localUb[1], localLb[1])
+  y <- calculate_random_walk_one_dimention(localUb[2], localLb[2])
+  return (data.frame(x, y))
+}
+
+calculate_random_walk_one_dimention<-function(l_ub, l_lb) 
+{
+  X <- c(0, cumsum(2*((runif(max_iteration) > 0.5) + 0) - 1) )
+  a <- min(X)
+  b <- max(X)
+  c <- l_lb
+  d <- l_ub
+  return ((X-a)*(d-c))/(b-a) + c
 }
 
 getCurrentRatio<-function() 
@@ -176,7 +192,7 @@ evaluateList<-function(points,evaluation)
 
 generateStartPoints<-function(mi)
 {
-  startPoints<-data.frame(sigma_x=numeric(mi), sigma_y=numeric(mi), x=numeric(mi), y=numeric(mi))
+  startPoints<-data.frame(x=numeric(mi), y=numeric(mi))
   for (i in 1:mi)
   {
     startPoints$x[i]<-runif(1, lb, ub)
@@ -209,7 +225,7 @@ initialization<-function(points)
 initModel<-function(history)
 {
   antlionPositions <- generateStartPoints(antlion_N)
-  antlionPositions <- evaluateList(antlionPositions, f1)
+  return (evaluateList(antlionPositions, f1))
 }
 
 findEliteAntlion<-function(model)
@@ -230,10 +246,10 @@ findEliteAntlion<-function(model)
 
 ########## main function
 
+
 library(ggplot2)
 
 startPoints<-generateStartPoints(antlion_N)
 
 objectx<-metaheuristicRun(initialization, startPoints, termination, f1)
 print(qplot(seq_along(objectx$x), objectx$quality))
-bla<-termination(3,2)

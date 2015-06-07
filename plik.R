@@ -1,6 +1,6 @@
 ## evolutionary 
 
-evo_N <- 100
+evo_N <-100
 evo_p_cross <- 0.5
 
 select<-function(history, model)
@@ -195,9 +195,20 @@ initModel<-function(points)
 ########## main function
 
 library(ggplot2)
+library(rgl)
+library(akima)
 
 startPoints<-generateStartPoints(evo_N)
 
 objectx<-metaheuristicRun(initialization, startPoints, termination, f1)
-print(qplot(seq_along(objectx$x), objectx$quality))
+#surface3d(x = objectx$x, y= objectx$y, z=objectx$quality )
+#qplot(seq_along(objectx$y), objectx$x, data=objectx)
 bla<-termination(3,2)
+
+x <- objectx$x 
+y <- objectx$y 
+z <- objectx$quality 
+temp <- interp(x, y, z)
+persp3d(temp, col="skyblue")
+plot.new() 
+image(temp) 
