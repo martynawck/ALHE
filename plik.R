@@ -1,6 +1,6 @@
 ## evolutionary 
 
-evo_N <- 10
+evo_N <- 100
 evo_p_cross <- 0.5
 
 select<-function(history, model)
