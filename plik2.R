@@ -3,7 +3,7 @@
 ## particle swarm
 
 psPopulation<-50
-psIterations<-500
+psIterations<-5000
 cParam<-0.73
 aParam<-2.05
 
@@ -16,17 +16,17 @@ ps.selection<-function(history, model)
 
 ps.modelUpdate<-function(selectedPoints, model)
 {
-  for (i in 1:psPopulation) {
-  	if (selectedPoints$quality[i]<model$localBestMinimum[i]) {
-  		model$localBestMinimum[i]<-selectedPoints$quality[i]
-  		model$localBestX[i]<-selectedPoints$x[i]
-  		model$localBestY[i]<-selectedPoints$y[i]
-  	}
-  	if (selectedPoints$quality[i] < model$globalBestMinimum[1]) {
-  		model$globalBestMinimum[1]<-selectedPoints$quality[i]
-  		model$globalBestX[1]<-selectedPoints$x[i]
-  		model$globalBestY[1]<-selectedPoints$y[i]
-  	}
+	for (i in 1:psPopulation) {
+		if (selectedPoints$quality[i] < model$localBestMinimum[i]) {
+			model$localBestMinimum[i]<-selectedPoints$quality[i]
+			model$localBestX[i]<-selectedPoints$x[i]
+			model$localBestY[i]<-selectedPoints$y[i]
+		}
+		if (selectedPoints$quality[i] < model$globalBestMinimum[1]) {
+			model$globalBestMinimum[1]<-selectedPoints$quality[i]
+			model$globalBestX[1]<-selectedPoints$x[i]
+			model$globalBestY[1]<-selectedPoints$y[i]
+		}
   }
   return (model)
 }
@@ -40,9 +40,11 @@ ps.variation<-function(points, model)
 		velocity<-c(points$velocityX[i], points$velocityY[i])
 		position<-c(points$x[i], points$y[i])
 		localBestPosition<-c(model$localBestX[i], model$localBestY[i])
-		newVelocity<-aParam*(position + cParam*(rg*(globalBestPosition - position) + rl*(localBestPosition - position))) 
+		newVelocity<-aParam*(velocity + cParam*(rg*(globalBestPosition - position) + rl*(localBestPosition - position))) 
 		points$x[i]<-points$x[i]+newVelocity[[1]]
 		points$y[i]<-points$y[i]+newVelocity[[2]]
+		points$velocityX[i]<-newVelocity[[1]]
+		points$velocityY[i]<-newVelocity[[2]]
 		if (points$x[i] < -512) {
 			points$x[i]<-(-512)
 		}
@@ -66,8 +68,8 @@ ps.startPoints<-function(number)
   for (i in 1:psPopulation) {
 	points$x[i]<-runif(1, -512, 512)
 	points$y[i]<-runif(1, -512, 512)
-	points$velocityX[i]<-runif(1, -512, 512)
-	points$velocityY[i]<-runif(1, -512, 512)
+	points$velocityX[i]<-0.0
+	points$velocityY[i]<-0.0
   }
   return (points)
 }
@@ -168,10 +170,16 @@ evaluation<-function(x, y)
 
 ########## funtion
 
+
+bla<-termination(3,2)
+
+
 library(ggplot2)
+library(rgl)
+library(akima)
 
 startPoints<-ps.startPoints(10)
 history<-metaheuristicRun(ps.initialization, startPoints, termination, evaluation)
-print(qplot(seq_along(history$x), history$quality))
-
 bla<-termination(3,2)
+
+print(historyPop(history, 5))
