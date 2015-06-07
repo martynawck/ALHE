@@ -1,47 +1,11 @@
 ## evolutionary 
+
+evo_N <- 10
+evo_p_cross <- 0.5
+
 select<-function(history, model)
 {
-  a<-runif(1)
-  usedValues <- vector(mode="numeric", length=0)
-  
-  if (a < prawdopodobienstwo) {
-    sigma_x<-vector(mode="double", length=0)
-    sigma_y<-vector(mode="double", length=0)
-    x<-vector(mode="double", length=0)
-    y<-vector(mode="double", length=0)
-    for (i in 1:2) {
-          if (vector.is.empty(usedValues)) {
-            j <- sample(1:length(history$x), 1)
-            
-            usedValues<-c(usedValues, j)
-            sigma_x<-c(sigma_x, history$sigma_x[j])
-            sigma_y<-c(sigma_y, history$sigma_y[j])
-            x<-c(x, history$x[j])
-            y<-c(y, history$y[j])
-            
-          } else {
-            
-            while (is.element(j,usedValues) ) {
-              j <- sample(1:length(history$x), 1)
-            }
-            
-            usedValues<-c(usedValues, j)
-            sigma_x<-c(sigma_x, history$sigma_x[j])
-            sigma_y<-c(sigma_y, history$sigma_y[j])
-            x<-c(x, history$x[j])
-            y<-c(y, history$y[j])
-            
-          }
-    }
-    temp<-data.frame(sigma_x=sigma_x, sigma_y=sigma_y, x=x, y=y)
-    
-  } else {
-    j <- sample(1:length(history$x), 1)
-    usedValues<-c(usedValues, j)
-    temp<-data.frame(sigma_x=history$sigma_x[j], sigma_y=history$sigma_y[j], x=history$x[j], y=history$y[j])
-  }
-
-  return (temp)
+   return (historyPop(history, evo_N)) 
 }
 
 vector.is.empty <- function(x) 
@@ -49,26 +13,47 @@ vector.is.empty <- function(x)
 
 modelUpdate<-function(selectedPoints, oldModel)
 {
-  print(oldModel)
-  for (i in 1:length(selectedPoints$x)) {
-    oldModel<-oldModel[-(oldModel$x == selectedPoints$x[i]),]
-    #oldModel<-oldModel[- selectedPoints$x[i] ,]
-  }
-  print("old model")
-  print(oldModel)
   return (oldModel)
 }
 
 variation<-function(selectedPoints, model)
 { 
-  if (length(selectedPoints$x) == 1) {
-    selectedPoints<-mutation(selectedPoints)
+  newGen<-data.frame(sigma_x=numeric(evo_N), sigma_y=numeric(evo_N), x=numeric(evo_N), y=numeric(evo_N))
+  for (i in 1:evo_N)
+  {
+    a<-runif(1)
+    if (a < evo_p_cross) 
+    {
+      # wybierz k=2 rodziców
+      parent_1 <- roulette_sel(selectedPoints)
+      parent_2 <- roulette_sel(selectedPoints)
+      # krzyżowanie + mutacja
+      newPoint <- crossover(parent_1, parent_2)
+    } 
+    else 
+    {
+      #tylko mutacja      
+      newPoint <- roulette_sel(selectedPoints)
+    }
+    newGen[i] <- mutation(newPoint)
   }
-  else {
-    afterCrossover<-crossover(selectedPoints[1,], selectedPoints[2,] )
-    selectedPoints<-mutation(afterCrossover)
+  
+  return (newGen)
+}
+
+roulette_sel<-function(points) 
+{
+  points <- evaluateList(points, f1)
+  maxVal <- sum(points$quality)
+  tmp <- sample(0:maxVal, 1)
+  i <- 0
+  sumQ <- 0
+  while ( tmp > sumQ )
+  {
+    i<-i+1
+    sumQ<-sumQ + points$quality[i]
   }
-  return (selectedPoints)
+  return (points[i])
 }
 
 crossover<-function(parent1, parent2)
@@ -146,8 +131,7 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
 
 historyPush<-function(oldHistory, newPoints)
 {
-  newHistory <- rbind(oldHistory, data.frame(sigma_x = newPoints$sigma_x, sigma_y = newPoints$sigma_y, x= newPoints$x, y = newPoints$) )
-                      
+  newHistory <- c(oldHistory, newPoints)
   return (newHistory)
 }
 
@@ -167,8 +151,6 @@ evaluateList<-function(points,evaluation)
 }
 
 #commonFunctions
-
-mi<-100
 
 generateStartPoints<-function(mi)
 {
@@ -193,7 +175,7 @@ termination<-function(i, n)
   }
 }
 
-evaluation<-function(x, y)
+f1<-function(x, y)
 {
   return(x^2 + y^2)
 }
@@ -211,13 +193,12 @@ initModel<-function(points)
 }
 
 
-########## main funtion
+########## main function
 
 library(ggplot2)
 
-startPoints<-generateStartPoints(mi)
-prawdopodobienstwo<-0.5
+startPoints<-generateStartPoints(evo_N)
 
-objectx<-metaheuristicRun(initialization, startPoints, termination, evaluation)
+objectx<-metaheuristicRun(initialization, startPoints, termination, f1)
 print(qplot(seq_along(objectx$x), objectx$quality))
-#bla<-termination(3,2)
+bla<-termination(3,2)
