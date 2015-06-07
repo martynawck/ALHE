@@ -64,7 +64,7 @@ ps.startPoints<-function(number)
 {
   points<-data.frame( x=numeric(psPopulation), y=numeric(psPopulation), velocityX=numeric(psPopulation), velocityY=numeric(psPopulation), quality=numeric(psPopulation))
   for (i in 1:psPopulation) {
-	points$x[i]<-runif(1, -512, 521)
+	points$x[i]<-runif(1, -512, 512)
 	points$y[i]<-runif(1, -512, 512)
 	points$velocityX[i]<-runif(1, -512, 512)
 	points$velocityY[i]<-runif(1, -512, 512)
