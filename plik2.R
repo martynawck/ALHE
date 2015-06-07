@@ -135,9 +135,9 @@ historyPush<-function(oldHistory, newPoints)
 
 historyPop<-function(history, number)
 {
-  stop=length(history)
+  stop=nrows(history)
   start=max(stop-number+1,1)
-  return(history[start:stop])
+  return(history[start:stop,])
 }
 
 evaluateList<-function(points,evaluation)

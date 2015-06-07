@@ -1,10 +1,10 @@
 
-antlion_N <- 50
+antlion_N <- 20
 antNumber <- antlion_N
 lb <- -512
 ub <- 512
-max_iteration <- 50
-current_iteration <-1
+max_iteration <- 20
+current_iteration <- 1
 
 select<-function(history, model)
 {
@@ -14,17 +14,14 @@ select<-function(history, model)
 modelUpdate<-function(selectedPoints, oldModel)
 {
   selectedPoints <- evaluateList(selectedPoints, f1)
-  if ("antlionIdx" %in% colnames(selectedPoints)) {
-    for (i in 1:antNumber)
+  for (i in 1:antNumber)
+  {
+    antlionIdx <- selectedPoints$antlionIdx[i]
+    if (antlionIdx != 0 && selectedPoints$quality[i] > oldModel$quality[antlionIdx])  # jeśli mrówka jest lepsza od mrówkolwa
     {
-      antlionIdx <- selectedPoints$antlionIdx[i]
-      if (selectedPoints$quality[i] > oldModel$quality[antlionIdx])  # jeśli mrówka jest lepsza od mrówkolwa
-      {
-        print("omnomnom") 
-        oldModel[i,] <- selectedPoints[i,]      #mrówkolew ją zjada i przechodzi na jej miejsce
-      }
+      oldModel[i,] <- selectedPoints[i,]      #mrówkolew ją zjada i przechodzi na jej miejsce
     }
-  } 
+  }
   return (evaluateList(oldModel, f1))
 }
 
@@ -58,6 +55,7 @@ variation<-function(selectedPoints, model)
       selectedPoints$y[i] <- lb  
     }
   }
+  return (selectedPoints)
 }
 
 random_walk<-function(antlion) 
@@ -175,9 +173,9 @@ historyPush<-function(oldHistory, newPoints)
 
 historyPop<-function(history, number)
 {
-  stop=length(history)
-  start=max(stop-number+1,1)
-  return(history[start:stop])
+  h_stop=nrow(history)
+  h_start=max(h_stop-number+1,1)
+  return(history[h_start:h_stop,])
 }
 
 evaluateList<-function(points,evaluation)
@@ -192,7 +190,7 @@ evaluateList<-function(points,evaluation)
 
 generateStartPoints<-function(mi)
 {
-  startPoints<-data.frame(x=numeric(mi), y=numeric(mi))
+  startPoints<-data.frame(x=numeric(mi), y=numeric(mi), antlionIdx=0)
   for (i in 1:mi)
   {
     startPoints$x[i]<-runif(1, lb, ub)
@@ -203,6 +201,7 @@ generateStartPoints<-function(mi)
 
 termination<-function(i, n)
 {
+  print(i)
   if (i <= n) { 
     return (F) 
   } 
@@ -213,7 +212,8 @@ termination<-function(i, n)
 
 f1<-function(x, y)
 {
-  return(x^2 + y^2)
+  #return(x^2 + y^2)
+  return (-x^2 -y^2 + 600000)
 }
 
 initialization<-function(points)
@@ -224,23 +224,19 @@ initialization<-function(points)
 
 initModel<-function(history)
 {
-  antlionPositions <- generateStartPoints(antlion_N)
+  antlionPositions<-data.frame(x=numeric(antlion_N), y=numeric(antlion_N))
+  for (i in 1:antlion_N)
+  {
+    antlionPositions$x[i]<-runif(1, lb, ub)
+    antlionPositions$y[i]<-runif(1, lb, ub)
+  }
   return (evaluateList(antlionPositions, f1))
 }
 
 findEliteAntlion<-function(model)
 {
-  maxQ <- 0
-  maxId <- 0
-  for (i in 1:antlion_N)
-  {
-    if (model$quality[i] > maxQ) 
-    {
-      maxQ <-model$quality[i]
-      maxId <- i
-    }
-  }
-  return (model[i,])
+  idx <- which.max(model$quality)
+  return (model[idx,])
 }
 
 
