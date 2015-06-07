@@ -35,7 +35,7 @@ variation<-function(selectedPoints, model)
       #tylko mutacja      
       newPoint <- roulette_sel(selectedPoints)
     }
-    newGen[i] <- mutation(newPoint)
+    newGen[i,] <- mutation(newPoint)
   }
   
   return (newGen)
@@ -53,7 +53,7 @@ roulette_sel<-function(points)
     i<-i+1
     sumQ<-sumQ + points$quality[i]
   }
-  return (points[i])
+  return (points[i,])
 }
 
 crossover<-function(parent1, parent2)
@@ -106,7 +106,6 @@ aggregatedOperator<-function(history, oldModel)
 { 
   selectedPoints<-select(history, oldModel)
   newModel<-modelUpdate(selectedPoints, oldModel)
-  print(length(newModel$x))
   newPoints<-variation(selectedPoints, newModel)
   return (list(newPoints=newPoints,newModel=newModel))
 }
@@ -122,7 +121,7 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
     i<-i+1
     aa<-aggregatedOperator(history, model)
     aa$newPoints<-evaluateList(aa$newPoints, evaluation)
-    history<-aa$newModel
+  #  history<-aa$newModel
     history<-historyPush(history,aa$newPoints)
     model<-aa$newModel
   }
@@ -131,7 +130,7 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
 
 historyPush<-function(oldHistory, newPoints)
 {
-  newHistory <- c(oldHistory, newPoints)
+  newHistory <- rbind(oldHistory, newPoints)
   return (newHistory)
 }
 
