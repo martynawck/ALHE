@@ -1,30 +1,18 @@
-## evolutionary 
-
 ## particle swarm
 
 minValueInIteration<-numeric(length=0)
-
-psPopulation<-50
+psPopulation<-10
 psIterations<-100
-cParam<-0.73
-aParam<-2.05
+cParam<-2.05
+aParam<-0.73
 
 
-addToMinVector<-function(vector, value)
-{
-  vector<-c(vector,value)
-  return (vector)
-}
-
-
-ps.selection<-function(history, model)
-{
+ps.selection<-function(history, model) {
 	selectedPoints<-historyPop(history, psPopulation)
 	return (selectedPoints)
 }
 
-ps.modelUpdate<-function(selectedPoints, model)
-{
+ps.modelUpdate<-function(selectedPoints, model) {
 	for (i in 1:psPopulation) {
 		if (selectedPoints$quality[i] < model$localBestMinimum[i]) {
 			model$localBestMinimum[i]<-selectedPoints$quality[i]
@@ -36,13 +24,12 @@ ps.modelUpdate<-function(selectedPoints, model)
 			model$globalBestX[1]<-selectedPoints$x[i]
 			model$globalBestY[1]<-selectedPoints$y[i]
 		}
-  }
+	}
 	minValueInIteration<<-addToMinVector(minValueInIteration, min(model$globalBestMinimum[1])) 
-  return (model)
+	return (model)
 }
 
-ps.variation<-function(points, model)
-{
+ps.variation<-function(points, model) {
 	globalBestPosition<-c(model$globalBestX[1], model$globalBestY[1])
 	for (i in 1:psPopulation) {
 		rg<-runif(1, 0, 1)
@@ -55,25 +42,24 @@ ps.variation<-function(points, model)
 		points$y[i]<-points$y[i]+newVelocity[[2]]
 		points$velocityX[i]<-newVelocity[[1]]
 		points$velocityY[i]<-newVelocity[[2]]
-		if (points$x[i] < -20) {
-			points$x[i]<-(-20)
+		if (points$x[i] < -10) {
+			points$x[i]<-(-10)
 		}
-		if (points$x[i] > 20) {
-			points$x[i]<-20
+		if (points$x[i] > 10) {
+			points$x[i]<-10
 		}
-		if (points$y[i] < -20) {
-			points$y[i]<-(-20)
+		if (points$y[i] < -10) {
+			points$y[i]<-(-10)
 		}
-		if (points$y[i] > 20) {
-			points$y[i]<-20
+		if (points$y[i] > 10) {
+			points$y[i]<-10
 		}
 	}
 	return (points)
 }
 
 
-ps.startPoints<-function(number) 
-{
+ps.startPoints<-function(number) {
   points<-data.frame( x=numeric(psPopulation), y=numeric(psPopulation), velocityX=numeric(psPopulation), velocityY=numeric(psPopulation), quality=numeric(psPopulation))
   for (i in 1:psPopulation) {
 	points$x[i]<-runif(1, -10, 10)
@@ -89,8 +75,7 @@ ps.initialization<-function(startPoints)
 	return (startPoints)
 }
 
-ps.initModel<-function(history)
-{
+ps.initModel<-function(history) {
 	model<-data.frame(globalBestMinimum=numeric(psPopulation), globalBestX=numeric(psPopulation), globalBestY=numeric(psPopulation), localBestMinimum=numeric(psPopulation), localBestX=numeric(psPopulation), localBestY=numeric(psPopulation))
 	for (i in 1:psPopulation) {
 		model$localBestMinimum[i]<-history$quality[i]
@@ -101,87 +86,71 @@ ps.initModel<-function(history)
 	model$globalBestMinimum[1]<-model$localBestMinimum[minIndex]
 	model$globalBestX[1]<-model$localBestX[minIndex]
 	model$globalBestY[1]<-model$localBestY[minIndex]
-  return (model)
+	return (model)
 }
-
-
-
-## antlion
 
 
 ## the engine
 
-aggregatedOperator<-function(history, oldModel)
-{
-  
-  selectedPoints<-ps.selection(history, oldModel)
-  newModel<-ps.modelUpdate(selectedPoints, oldModel)
-  newPoints<-ps.variation(selectedPoints, newModel)
-  return (list(newPoints=newPoints,newModel=newModel))
+aggregatedOperator<-function(history, oldModel) {
+	selectedPoints<-ps.selection(history, oldModel)
+	newModel<-ps.modelUpdate(selectedPoints, oldModel)
+	newPoints<-ps.variation(selectedPoints, newModel)
+	return (list(newPoints=newPoints,newModel=newModel))
 }
 
-metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
-{
-  history<-ps.initialization(startPoints)
-  history<-evaluateList(history, evaluation)
-  model<-ps.initModel(history)
-  i<-1
-  while (!termination(i, psIterations))
-  {
-    aa<-aggregatedOperator(history, model)
-    aa$newPoints<-evaluateList(aa$newPoints, evaluation)
-    history<-historyPush(history,aa$newPoints)
-    model<-aa$newModel
-    i<-i+1
-  }
-  return(history)
+metaheuristicRun<-function(initialization, startPoints, termination, evaluation) {
+	history<-ps.initialization(startPoints)
+	history<-evaluateList(history, evaluation)
+	model<-ps.initModel(history)
+	i<-1
+	while (!termination(i, psIterations)) {
+		aa<-aggregatedOperator(history, model)
+		aa$newPoints<-evaluateList(aa$newPoints, evaluation)
+		history<-historyPush(history,aa$newPoints)
+		model<-aa$newModel
+		i<-i+1
+	}
+	return(history)
 }
 
-historyPush<-function(oldHistory, newPoints)
-{
-  newHistory<-c(oldHistory,newPoints)
-  return (newHistory)
+historyPush<-function(oldHistory, newPoints) {
+	newHistory<-c(oldHistory,newPoints)
+	return (newHistory)
 }
 
-historyPop<-function(history, number)
-{
-  #stop=nrow(history)
-  #start=max(stop-number+1,1)
-  #return(history[start:stop])
-  stop=length(history)
-  start=max(stop-number+1,1)
-  return(history[start:stop])
+historyPop<-function(history, number) {
+	stop=length(history)
+	start=max(stop-number+1,1)
+	return(history[start:stop])
 }
 
-evaluateList<-function(points,evaluation)
-{
-
-  for (i in 1:psPopulation) {
-    points$quality[i]<-evaluation(points$x[i], points$y[i])
-  }
-  return (points) 
+evaluateList<-function(points,evaluation){
+	for (i in 1:psPopulation) {
+		points$quality[i]<-evaluation(points$x[i], points$y[i])
+	}
+	return (points) 
 }
 
-#commonFunctions
-
-
-termination<-function(i, n)
-{
-  if (i <= n) { 
-    return (F) 
-  } 
-  else { 
-    return (T) 
-  }
+termination<-function(i, n) {
+	if (i <= n) { 
+		return (F) 
+	} 
+	else { 
+		return (T) 
+	}
 }
 
-evaluation<-function(x, y)
-{
-  return(x^2 + y^2)
+addToMinVector<-function(vector, value) {
+	vector<-c(vector,value)
+	return (vector)
 }
 
+evaluation<-function(x, y) {
+	return(x^2 + y^2)
+}
 
-########## funtion
+##main function
 
 
 bla<-termination(3,2)
@@ -191,7 +160,7 @@ library(ggplot2)
 library(rgl)
 library(akima)
 
-startPoints<-ps.startPoints(40)
+startPoints<-ps.startPoints()
 objectx<-metaheuristicRun(ps.initialization, startPoints, termination, evaluation)
 bla<-termination(3,2)
 
