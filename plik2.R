@@ -16,17 +16,17 @@ ps.selection<-function(history, model)
 
 ps.modelUpdate<-function(selectedPoints, model)
 {
-  for (i in 1:psPopulation) {
-  	if (selectedPoints$quality[i] < model$localBestMinimum[i]) {
-  		model$localBestMinimum[i]<-selectedPoints$quality[i]
-  		model$localBestX[i]<-selectedPoints$x[i]
-  		model$localBestY[i]<-selectedPoints$y[i]
-  	}
-  	if (selectedPoints$quality[i] < model$globalBestMinimum[1]) {
-  		model$globalBestMinimum[1]<-selectedPoints$quality[i]
-  		model$globalBestX[1]<-selectedPoints$x[i]
-  		model$globalBestY[1]<-selectedPoints$y[i]
-  	}
+	for (i in 1:psPopulation) {
+		if (selectedPoints$quality[i] < model$localBestMinimum[i]) {
+			model$localBestMinimum[i]<-selectedPoints$quality[i]
+			model$localBestX[i]<-selectedPoints$x[i]
+			model$localBestY[i]<-selectedPoints$y[i]
+		}
+		if (selectedPoints$quality[i] < model$globalBestMinimum[1]) {
+			model$globalBestMinimum[1]<-selectedPoints$quality[i]
+			model$globalBestX[1]<-selectedPoints$x[i]
+			model$globalBestY[1]<-selectedPoints$y[i]
+		}
   }
   return (model)
 }
@@ -43,8 +43,8 @@ ps.variation<-function(points, model)
 		newVelocity<-aParam*(velocity + cParam*(rg*(globalBestPosition - position) + rl*(localBestPosition - position))) 
 		points$x[i]<-points$x[i]+newVelocity[[1]]
 		points$y[i]<-points$y[i]+newVelocity[[2]]
-    points$velocityX[i]<-newVelocity[[1]]
-    points$velocityY[i]<-newVelocity[[2]]
+		points$velocityX[i]<-newVelocity[[1]]
+		points$velocityY[i]<-newVelocity[[2]]
 		if (points$x[i] < -512) {
 			points$x[i]<-(-512)
 		}
