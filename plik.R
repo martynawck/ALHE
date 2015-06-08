@@ -1,10 +1,5 @@
 ## evolutionary 
 
-minValueInIteration<-numeric(length=0)
-
-evo_N <-20
-evo_p_cross <- 0.5
-
 addToMinVector<-function(vector, value)
 {
   vector<-c(vector,value)
@@ -52,16 +47,33 @@ variation<-function(selectedPoints, model)
 roulette_sel<-function(points) 
 {
   points <- evaluateList(points, f1)
-  maxVal <- sum(points$quality)
-  tmp <- sample(0:maxVal, 1)
+  smQuality <- softMax(points$quality)
+  tmp <- runif(1)
   i <- 0
   sumQ <- 0
-  while ( tmp > sumQ )
+  while ( sumQ <= tmp )
   {
     i<-i+1
-    sumQ<-sumQ + points$quality[i]
+    sumQ<-sumQ + smQuality[i]
   }
   return (points[i,])
+}
+
+softMax<-function(pointsQuality)
+{
+  pointsQuality <- scale((-1)*pointsQuality)
+  result <- c()
+  S <- 0
+  for (i in 1:length(pointsQuality)) 
+  {
+    S <- S + exp(pointsQuality[i])
+  }
+  for (i in 1:length(pointsQuality)) 
+  {
+    x <- exp(pointsQuality[i])/S
+    result <- c(result, x)
+  }
+  return (result)
 }
 
 crossover<-function(parent1, parent2)
@@ -87,25 +99,20 @@ mutation<-function(point)
   point$sigma_y <- point$sigma_y*exp(rA*epsilon + rB*epsilonY)
   point$x <- point$x + point$sigma_x*vX
   point$y <- point$y + point$sigma_y*vY
-  if (point$x < -20) {
-    point$x<-(-20)
+  if (point$x < evo_lb) {
+    point$x<-(evo_lb)
   }
-  if (point$x > 20) {
-    point$x<-20
+  if (point$x > evo_ub) {
+    point$x<-evo_ub
   }
-  if (point$y < -20) {
-    point$y<-(-20)
+  if (point$y < evo_lb) {
+    point$y<-(evo_lb)
   }
-  if (point$y > 20) {
-    point$y<-20
+  if (point$y > evo_ub) {
+    point$y<-evo_ub
   }
   return (point)
 }
-
-
-## particle swarm
-
-## antlion
 
 
 ## the engine
@@ -124,12 +131,11 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
   history<-evaluateList(history, evaluation)
   model<-initModel(history)
   i<-1
-  while (!termination(i,5))
+  while (!termination(i,evo_max_iter))
   {
     i<-i+1
     aa<-aggregatedOperator(history, model)
     aa$newPoints<-evaluateList(aa$newPoints, evaluation)
-  #  history<-aa$newModel
     history<-historyPush(history,aa$newPoints)
     model<-aa$newModel
   }
@@ -186,15 +192,10 @@ termination<-function(i, n)
   }
 }
 
-f1<-function(x, y)
-{
-  return(x^2 + y^2)
-}
 
 initialization<-function(points)
 {
-  historyPoints<-data.frame(points)
-  return (historyPoints)
+  return(points)
 }
 
 initModel<-function(points)
@@ -203,28 +204,57 @@ initModel<-function(points)
   return (historyPoints)
 }
 
+# prosta funkcja
+f1<-function(x, y)
+{
+  return(x^2 + y^2)
+}
+
+# funkcja Ackleya
+f2<-function(x, y)
+{
+  return (-20*exp(-0.2*sqrt(0.5*(x^2 + y^2))) - exp(0.5*(cos(2*pi*x) + cos(2*pi*y))) + exp(1) + 20)
+}
+
+#funkcja Beale'a
+f3<-function(x, y)
+{
+  return ( (1.5-x+x*y)^2 + (2.25 - x + x*y^2)^2 + (2.625 - x + x*y^3)^2 ) 
+}
+
+# funkcja Bukina F6
+f4<-function(x, y)
+{
+  return ( 100*sqrt(abs(y-0.01*x^2)) + 0.01*abs(x+10) ) 
+}
 
 ########## main function
+
+minValueInIteration<-numeric(length=0)
+
+#parametry
+evo_max_iter<-10      # liczba iteracji
+evo_lb <- -10         # ograniczenie dolne na x, y
+evo_ub <- 10          # ograniczenie górne na x, y
+evo_N <- 20           # liczba osobników w jednym pokoleniu
+evo_p_cross <- 0.5    # prawdopodobieństwo krzyżowania
+func <- f3            # funkcja wykorzystywana do ewaluacji: f1/f2/f3/f4
 
 library(ggplot2)
 library(rgl)
 library(akima)
 
 startPoints<-generateStartPoints(evo_N)
-
-objectx<-metaheuristicRun(initialization, startPoints, termination, f1)
-#surface3d(x = objectx$x, y= objectx$y, z=objectx$quality )
-#qplot(seq_along(objectx$y), objectx$x, data=objectx)
-bla<-termination(3,2)
-
+objectx<-metaheuristicRun(initialization, startPoints, termination, func)
+  
 x <- objectx$x 
 y <- objectx$y 
 z <- objectx$quality 
-temp <- interp(x, y, z)
+temp <- interp(x, y, z, duplicate="strip")
 #rzut na x-y
 plot.new() 
 image(temp) 
 #obraz 3d
 persp3d(temp, col="skyblue")
-#quality(iter)
 print(qplot(seq_along(minValueInIteration), minValueInIteration))
+

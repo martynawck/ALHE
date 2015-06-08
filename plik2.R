@@ -1,18 +1,12 @@
 ## particle swarm
 
-minValueInIteration<-numeric(length=0)
-psPopulation<-10
-psIterations<-100
-cParam<-2.05
-aParam<-0.73
 
-
-ps.selection<-function(history, model) {
+selection<-function(history, model) {
 	selectedPoints<-historyPop(history, psPopulation)
 	return (selectedPoints)
 }
 
-ps.modelUpdate<-function(selectedPoints, model) {
+modelUpdate<-function(selectedPoints, model) {
 	for (i in 1:psPopulation) {
 		if (selectedPoints$quality[i] < model$localBestMinimum[i]) {
 			model$localBestMinimum[i]<-selectedPoints$quality[i]
@@ -29,7 +23,7 @@ ps.modelUpdate<-function(selectedPoints, model) {
 	return (model)
 }
 
-ps.variation<-function(points, model) {
+variation<-function(points, model) {
 	globalBestPosition<-c(model$globalBestX[1], model$globalBestY[1])
 	for (i in 1:psPopulation) {
 		rg<-runif(1, 0, 1)
@@ -42,24 +36,24 @@ ps.variation<-function(points, model) {
 		points$y[i]<-points$y[i]+newVelocity[[2]]
 		points$velocityX[i]<-newVelocity[[1]]
 		points$velocityY[i]<-newVelocity[[2]]
-		if (points$x[i] < -10) {
-			points$x[i]<-(-10)
+		if (points$x[i] < lb) {
+			points$x[i]<-lb
 		}
-		if (points$x[i] > 10) {
-			points$x[i]<-10
+		if (points$x[i] > ub) {
+			points$x[i]<-ub
 		}
-		if (points$y[i] < -10) {
-			points$y[i]<-(-10)
+		if (points$y[i] < lb) {
+			points$y[i]<-lb
 		}
-		if (points$y[i] > 10) {
-			points$y[i]<-10
+		if (points$y[i] > ub) {
+			points$y[i]<-ub
 		}
 	}
 	return (points)
 }
 
 
-ps.startPoints<-function(number) {
+startPoints<-function(number) {
   points<-data.frame( x=numeric(psPopulation), y=numeric(psPopulation), velocityX=numeric(psPopulation), velocityY=numeric(psPopulation), quality=numeric(psPopulation))
   for (i in 1:psPopulation) {
 	points$x[i]<-runif(1, -10, 10)
@@ -70,12 +64,8 @@ ps.startPoints<-function(number) {
   return (points)
 }
 
-ps.initialization<-function(startPoints)
-{
-	return (startPoints)
-}
 
-ps.initModel<-function(history) {
+initModel<-function(history) {
 	model<-data.frame(globalBestMinimum=numeric(psPopulation), globalBestX=numeric(psPopulation), globalBestY=numeric(psPopulation), localBestMinimum=numeric(psPopulation), localBestX=numeric(psPopulation), localBestY=numeric(psPopulation))
 	for (i in 1:psPopulation) {
 		model$localBestMinimum[i]<-history$quality[i]
@@ -93,16 +83,16 @@ ps.initModel<-function(history) {
 ## the engine
 
 aggregatedOperator<-function(history, oldModel) {
-	selectedPoints<-ps.selection(history, oldModel)
-	newModel<-ps.modelUpdate(selectedPoints, oldModel)
-	newPoints<-ps.variation(selectedPoints, newModel)
+	selectedPoints<-selection(history, oldModel)
+	newModel<-modelUpdate(selectedPoints, oldModel)
+	newPoints<-variation(selectedPoints, newModel)
 	return (list(newPoints=newPoints,newModel=newModel))
 }
 
 metaheuristicRun<-function(initialization, startPoints, termination, evaluation) {
-	history<-ps.initialization(startPoints)
+	history<-initialization(startPoints)
 	history<-evaluateList(history, evaluation)
-	model<-ps.initModel(history)
+	model<-initModel(history)
 	i<-1
 	while (!termination(i, psIterations)) {
 		aa<-aggregatedOperator(history, model)
@@ -115,15 +105,16 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
 }
 
 historyPush<-function(oldHistory, newPoints) {
-	newHistory<-c(oldHistory,newPoints)
+	newHistory<-rbind(oldHistory,newPoints)
 	return (newHistory)
 }
 
 historyPop<-function(history, number) {
-	stop=length(history)
+	stop=nrow(history)
 	start=max(stop-number+1,1)
-	return(history[start:stop])
+	return(history[start:stop,])
 }
+
 
 evaluateList<-function(points,evaluation){
 	for (i in 1:psPopulation) {
@@ -141,38 +132,69 @@ termination<-function(i, n) {
 	}
 }
 
+initialization<-function(points)
+{
+  return (points)
+}
+
 addToMinVector<-function(vector, value) {
 	vector<-c(vector,value)
 	return (vector)
 }
 
-evaluation<-function(x, y) {
-	return(x^2 + y^2)
+# prosta funkcja
+f1<-function(x, y)
+{
+  return(x^2 + y^2)
 }
+
+# funkcja Ackleya
+f2<-function(x, y)
+{
+  return (-20*exp(-0.2*sqrt(0.5*(x^2 + y^2))) - exp(0.5*(cos(2*pi*x) + cos(2*pi*y))) + exp(1) + 20)
+}
+
+#funkcja Beale'a
+f3<-function(x, y)
+{
+  return ( (1.5-x+x*y)^2 + (2.25 - x + x*y^2)^2 + (2.625 - x + x*y^3)^2 ) 
+}
+
+# funkcja Bukina F6
+f4<-function(x, y)
+{
+  return ( 100*sqrt(abs(y-0.01*x^2)) + 0.01*abs(x+10) ) 
+}
+
 
 ##main function
 
+minValueInIteration<-numeric(length=0)
 
-bla<-termination(3,2)
-
+#parametry
+psPopulation<- 10     # rozmiar populacji
+psIterations<- 10     # liczba iteracji
+cParam<- 2.05         # parametr równania
+aParam<- 0.73         # parametr równania
+lb<- (-10)            # ograniczenie dolne na x, y
+ub<- 10               # ograniczenie górne na x, y
+func <- f2            # funkcja wykorzystywana do ewaluacji: f1/f2/f3/f4
 
 library(ggplot2)
 library(rgl)
 library(akima)
 
-startPoints<-ps.startPoints()
-objectx<-metaheuristicRun(ps.initialization, startPoints, termination, evaluation)
-bla<-termination(3,2)
-
+startPoints<-startPoints()
+objectx<-metaheuristicRun(initialization, startPoints, termination, func)
 
 x <- objectx$x 
 y <- objectx$y 
 z <- objectx$quality 
-temp <- interp(x, y, z)
+temp <- interp(x, y, z, duplicate="strip")
 #rzut na x-y
 plot.new() 
 image(temp) 
 #obraz 3d
 persp3d(temp, col="skyblue")
-#quality(iter)
 print(qplot(seq_along(minValueInIteration), minValueInIteration))
+ 

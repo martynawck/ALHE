@@ -1,12 +1,4 @@
 
-minValueInIteration<-numeric(length=0)
-antlion_N <- 20
-antNumber <- antlion_N
-lb <- -512
-ub <- 512
-max_iteration <- 20
-current_iteration <- 1
-
 addToMinVector<-function(vector, value)
 {
   vector<-c(vector,value)
@@ -24,7 +16,7 @@ modelUpdate<-function(selectedPoints, oldModel)
   for (i in 1:antNumber)
   {
     antlionIdx <- selectedPoints$antlionIdx[i]
-    if (antlionIdx != 0 && selectedPoints$quality[i] > oldModel$quality[antlionIdx])  # jeśli mrówka jest lepsza od mrówkolwa
+    if (antlionIdx != 0 && selectedPoints$quality[i] < oldModel$quality[antlionIdx])  # jeśli mrówka jest lepsza od mrówkolwa
     {
       oldModel[i,] <- selectedPoints[i,]      #mrówkolew ją zjada i przechodzi na jej miejsce
     }
@@ -144,6 +136,39 @@ roulette_sel<-function(points)
   return (i)
 }
 
+roulette_sel<-function(points) 
+{
+  points <- evaluateList(points, f1)
+  smQuality <- softMax(points$quality)
+  tmp <- runif(1)
+  i <- 0
+  sumQ <- 0
+  while ( sumQ <= tmp )
+  {
+    i<-i+1
+    sumQ<-sumQ + smQuality[i]
+  }
+  return (i)
+}
+
+softMax<-function(pointsQuality)
+{
+  pointsQuality <- scale((-1)*pointsQuality)
+  result <- c()
+  S <- 0
+  for (i in 1:length(pointsQuality)) 
+  {
+    S <- S + exp(pointsQuality[i])
+  }
+  for (i in 1:length(pointsQuality)) 
+  {
+    x <- exp(pointsQuality[i])/S
+    result <- c(result, x)
+  }
+  return (result)
+}
+
+
 
 ## the engine
 
@@ -218,12 +243,6 @@ termination<-function(i, n)
   }
 }
 
-f1<-function(x, y)
-{
-  return(x^2 + y^2)
-  #return (-x^2 -y^2 + 600000)
-}
-
 initialization<-function(points)
 {
   historyPoints<-data.frame(points)
@@ -243,13 +262,47 @@ initModel<-function(history)
 
 findEliteAntlion<-function(model)
 {
-  idx <- which.max(model$quality)
+  idx <- which.min(model$quality)
   return (model[idx,])
 }
 
+# prosta funkcja
+f1<-function(x, y)
+{
+  return(x^2 + y^2)
+}
+
+# funkcja Ackleya
+f2<-function(x, y)
+{
+  return (-20*exp(-0.2*sqrt(0.5*(x^2 + y^2))) - exp(0.5*(cos(2*pi*x) + cos(2*pi*y))) + exp(1) + 20)
+}
+
+#funkcja Beale'a
+f3<-function(x, y)
+{
+  return ( (1.5-x+x*y)^2 + (2.25 - x + x*y^2)^2 + (2.625 - x + x*y^3)^2 ) 
+}
+
+# funkcja Bukina F6
+f4<-function(x, y)
+{
+  return ( 100*sqrt(abs(y-0.01*x^2)) + 0.01*abs(x+10) ) 
+}
 
 ########## main function
 
+
+minValueInIteration<-numeric(length=0)
+
+#parametry
+antlion_N <- 10            # liczba mrówkolwów
+antNumber <- antlion_N     # liczba mrówek
+lb <- -10                  # ograniczenie dolne na x, y
+ub <- 10                   # ograniczenie górne na x, y
+max_iteration <- 10        # liczba iteracji
+current_iteration <- 1     # obecna iteracja
+func <- f2                 # funkcja wykorzystywana do ewaluacji: f1/f2/f3/f4
 
 library(ggplot2)
 library(rgl)
@@ -257,7 +310,7 @@ library(akima)
 
 startPoints<-generateStartPoints(antlion_N)
 
-objectx<-metaheuristicRun(initialization, startPoints, termination, f1)
+objectx<-metaheuristicRun(initialization, startPoints, termination, func)
 #print(qplot(seq_along(objectx$x), objectx$quality))
 
 x <- objectx$x 
