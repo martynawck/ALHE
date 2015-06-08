@@ -1,4 +1,6 @@
 
+bestAntlion<-NULL
+
 addToMinVector<-function(vector, value)
 {
   vector<-c(vector,value)
@@ -192,8 +194,11 @@ metaheuristicRun<-function(initialization, startPoints, termination, evaluation)
     aa<-aggregatedOperator(history, model)
     aa$newPoints<-evaluateList(aa$newPoints, evaluation)
     history<-historyPush(history,aa$newPoints)
-    model<-aa$newModel
+    model<-aa$newModel 
   }
+  # porównanie mrówek i mrówkolwów po ostatniej iteracji
+  model<-modelUpdate(select(history, model), model)
+  bestAntlion<<-findEliteAntlion(model) # uzupełnienie zmiennej globalnej
   return(history)
 }
 
@@ -324,3 +329,5 @@ image(temp)
 persp3d(temp, col="skyblue")
 #quality(iter)
 print(qplot(seq_along(minValueInIteration), minValueInIteration))
+
+print(bestAntlion)
